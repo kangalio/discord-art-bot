@@ -41,11 +41,37 @@ discord_colorsets = {
 			lambda name: f":{name}_large_square:" if name in ("black", "white") else f":{name}_square:"),
 	"heart": gen_emoji_set_from_default_colors(
 			lambda name: ":heart:" if name == "red" else f":{name}_heart:"),
+	"food": {
+		":green_apple:": "77b255",
+		":apple:": "dd2e44",
+		":pear:": "a6d388",
+		":tangerine:": "f4900c",
+		":lemon:": "ffcc4d",
+		":grapes:": "734da9",
+		":strawberry:": "c1243b",
+		":peach:": "ff886c",
+		":mango:": "ea564b",
+		":tomato:": "dd2e44",
+		":eggplant:": "744eaa",
+		":hot_pepper:": "d92e46",
+		":onion:": "eacd99",
+		":garlic:": "d7dfe5",
+		":potato:": "d89d81",
+		":egg:": "f7dece",
+		":cheese:": "fdaa31",
+		":poultry_leg:": "c1694f",
+		":fortune_cookie:": "fbaa3f",
+		":dumpling:": "fed882",
+		":fried_shrimp:": "ffac33",
+		":cookie:": "d89d81",
+		":peanuts:": "cf8b6f",
+		":ice_cube:": "bcd7df",
+	}
 }
 
 # PUBLIC
-# mode: either "circle" or "square". decides if the program uses Discord's square or circle emojis
-# chars_per_line: emojis per line. Discord desktop can show max 67
+# mode: should correspond to one of `discord_colorsets`
+# chars_per_line: emojis per line. Discord desktop servers can show max 56 (67 in dms)
 # output_path: an optional path where the quantized image should be stored to
 def image_to_discord_messages(image: Image,
 		mode: str="square",

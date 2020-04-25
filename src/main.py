@@ -24,7 +24,6 @@ Ideas:
   Disadvantage: less chars per row
 - optional flag to condense multiple lines into a single message
   Disadvantage: irregular spacing inbetween lines
-- warn when over 2000 chars
 """
 
 
@@ -127,11 +126,11 @@ async def art(ctx):
 	running_channels.remove(ctx.message.channel)
 
 def test():
-	mode = "heart"
+	mode = "food"
 	output_path = "test/output.png"
-	max_chars_per_line = 20
+	max_chars_per_line = 100
 	
-	image = Image.open("test/image.png")
+	image = Image.open("test/image.jpg")
 	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line,
 			output_path=output_path)
 	with open("test/output.txt", "w") as f:
