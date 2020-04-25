@@ -112,4 +112,6 @@ async def art(ctx):
 	await draw_operation(ctx, url, mode, max_chars_per_line)
 	running_channels.remove(ctx.message.channel)
 
-bot.run("NzAzMzI3NDQ1NjI5MjcyMTY2.XqM_Lg.AwhQ9S-6KTRNJIWPIkQ-2-NhtwY")
+with open("token.txt") as f:
+	token = f.read()
+bot.run(token)
