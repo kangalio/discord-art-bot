@@ -7,7 +7,8 @@ from io import BytesIO
 import requests, discord
 from discord.ext import commands
 
-from convert import image_to_discord_messages 
+import convert
+from convert import image_to_discord_messages
 
 
 """
@@ -114,10 +115,8 @@ async def art(ctx):
 	for arg in args:
 		if arg == "outputimage":
 			should_send_image = True
-		elif arg == "square":
-			mode = "square"
-		elif arg == "circle":
-			mode = "circle"
+		elif arg in convert.discord_colorsets:
+			mode = arg
 		else:
 			try: max_chars_per_line = int(arg)
 			except ValueError: pass
