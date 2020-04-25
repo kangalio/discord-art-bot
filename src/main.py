@@ -126,6 +126,19 @@ async def art(ctx):
 	await draw_operation(ctx, url, mode, max_chars_per_line, should_send_image)
 	running_channels.remove(ctx.message.channel)
 
+def test():
+	mode = "heart"
+	output_path = "test/output.png"
+	max_chars_per_line = 20
+	
+	image = Image.open("test/image.png")
+	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line,
+			output_path=output_path)
+	with open("test/output.txt", "w") as f:
+		for line in lines:
+			print(line, file=f)
+
+# ~ test()
 with open("token.txt") as f:
 	token = f.read().strip()
 bot.run(token)
