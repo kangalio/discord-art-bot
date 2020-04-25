@@ -1,3 +1,4 @@
+from typing import *
 from PIL import Image
 
 def flatten(l):
@@ -33,7 +34,12 @@ discord_colors = [
 
 # mode: either "circle" or "square". decides if the program uses Discord's square or circle emojis
 # chars_per_line: emojis per line. Discord desktop can show max 67
-def image_to_discord_messages(image: Image, mode: str="square", max_chars_per_line: int=67):
+# output_path: an optional path where the quantized image should be stored to
+def image_to_discord_messages(image: Image,
+		mode: str="square",
+		max_chars_per_line: int=67,
+		output_path: Optional[str]=None):
+	
 	def colorname_to_emoji(name):
 		if mode == "square" and (name == "white" or name == "black"):
 			name += "_large"
@@ -49,7 +55,8 @@ def image_to_discord_messages(image: Image, mode: str="square", max_chars_per_li
 	if image.width > max_chars_per_line:
 		image = resize_to_width(image, max_chars_per_line)
 	image = quantize(image, palette)
-	# ~ image.save("converted.png", "png")
+	if output_path:
+		image.save(output_path)
 
 	pix = image.load()
 	lines = []

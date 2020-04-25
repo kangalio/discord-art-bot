@@ -23,6 +23,7 @@ Ideas:
   Disadvantage: less chars per row
 - optional flag to condense multiple lines into a single message
   Disadvantage: irregular spacing inbetween lines
+- warn when over 2000 chars
 """
 
 
@@ -46,11 +47,23 @@ bot = commands.Bot(command_prefix="$", description='A bot that does beautiful ar
 pending_stops_channels: List[discord.TextChannel] = [] # list of channels where user requested operation stop
 running_channels: List[discord.TextChannel] = [] # list of channels where an operation is running
 
-async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int):
+async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, should_send_image: bool):
 	message_write_start = time.time()
 	
 	image = Image.open(BytesIO(requests.get(url).content))
-	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line)
+	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line,
+			output_path="temp.png" if should_send_image else None)
+	
+	if should_send_image:
+		with open("temp.png", "rb") as f: # TODO: should use a varying filename
+			await ctx.message.channel.send(file=discord.File(f, "quantized_image.png"))
+	
+	line_lengths = [len(line) for line in lines]
+	if max(line_lengths) > 2000:
+		await ctx.message.channel.send(f"Uh oh the resulting image is too big. The lines range from"
+				f"{min(line_lengths)} to {max(line_lengths)} characters. Maximum is 2000")
+		return
+	
 	for i, line in enumerate(lines):
 		print(f"Sending line {i+1}/{len(lines)} ({len(line)} chars)...")
 		last_message = await ctx.message.channel.send(line)
@@ -90,26 +103,28 @@ async def art(ctx):
 		print("Warning: no image url found in message")
 		return
 	
-	# Start extracting parameters from the args
+	# NOW THE DRAW OPERATION STUFF BEGINS
 	
-	# Extract mode parameter
-	if "square" in args:
-		mode = "square"
-	elif "circle" in args:
-		mode = "circle"
-	else:
-		mode = "circle" # default
-	
-	# if user has any integer value as an arg, use that as max_chars_per_line
+	# default parameters
+	mode = "circle"
+	should_send_image = False
 	max_chars_per_line = 20
-	for arg in args:
-		try:
-			max_chars_per_line = int(arg)
-		except ValueError:
-			continue
 	
+	# extract parameters from args
+	for arg in args:
+		if arg == "outputimage":
+			should_send_image = True
+		elif arg == "square":
+			mode = "square"
+		elif arg == "circle":
+			mode = "circle"
+		else:
+			try: max_chars_per_line = int(arg)
+			except ValueError: pass
+	
+	# after having extracted the parameters, pass it to draw_operation to handle the actual business
 	running_channels.append(ctx.message.channel)
-	await draw_operation(ctx, url, mode, max_chars_per_line)
+	await draw_operation(ctx, url, mode, max_chars_per_line, should_send_image)
 	running_channels.remove(ctx.message.channel)
 
 with open("token.txt") as f:
