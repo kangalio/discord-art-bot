@@ -64,7 +64,7 @@ async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int):
 	
 	message_write_duration = time.time() - message_write_start
 	if message_write_duration > 10: # at 10s upwards we'll write a confirmation message
-		await ctx.message.channel.send("done")
+		await ctx.message.channel.send(f"Done in {message_write_duration:.2f}s")
 	
 	print("Completed operation")
 
@@ -113,5 +113,5 @@ async def art(ctx):
 	running_channels.remove(ctx.message.channel)
 
 with open("token.txt") as f:
-	token = f.read()
+	token = f.read().strip()
 bot.run(token)
