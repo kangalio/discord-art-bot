@@ -15,15 +15,6 @@ from convert import image_to_discord_messages
 This bot needs permissions:
 - Send Messages
 Permissions Integer: 2048
-
-
-Ideas:
-- optional flag to isnert spaces inbetween emojis. That way we'd have the same horizontal margin
-  as vertically (Discord puts a bit of margin between messages, coincidentally equating to exactly
-  1 space)
-  Disadvantage: less chars per row
-- optional flag to condense multiple lines into a single message
-  Disadvantage: irregular spacing inbetween lines
 """
 
 
@@ -47,12 +38,12 @@ bot = commands.Bot(command_prefix="$", description='A bot that does beautiful ar
 pending_stops_channels: List[discord.TextChannel] = [] # list of channels where user requested operation stop
 running_channels: List[discord.TextChannel] = [] # list of channels where an operation is running
 
-async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, should_send_image: bool):
+async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
 	message_write_start = time.time()
 	
 	image = Image.open(BytesIO(requests.get(url).content))
 	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line,
-			output_path="temp.png" if should_send_image else None)
+			output_path="temp.png" if should_send_image else None, spaced=spaced)
 	
 	if should_send_image:
 		with open("temp.png", "rb") as f: # TODO: should use a varying filename
@@ -60,7 +51,7 @@ async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, shou
 	
 	line_lengths = [len(line) for line in lines]
 	if max(line_lengths) > 2000:
-		await ctx.message.channel.send(f"Uh oh the resulting image is too big. The lines range from"
+		await ctx.message.channel.send(f"Uh oh the resulting image is too big. The lines range from "
 				f"{min(line_lengths)} to {max(line_lengths)} characters. Maximum is 2000")
 		return
 	
@@ -106,8 +97,9 @@ async def art(ctx):
 	# NOW THE DRAW OPERATION STUFF BEGINS
 	
 	# default parameters
-	mode = "circle"
 	should_send_image = False
+	mode = "circle"
+	spaced = False
 	max_chars_per_line = 20
 	
 	# extract parameters from args
@@ -116,13 +108,15 @@ async def art(ctx):
 			should_send_image = True
 		elif arg in convert.discord_colorsets:
 			mode = arg
+		elif arg in ["spaced"]:
+			spaced = True
 		else:
 			try: max_chars_per_line = int(arg)
 			except ValueError: pass
 	
 	# after having extracted the parameters, pass it to draw_operation to handle the actual business
 	running_channels.append(ctx.message.channel)
-	await draw_operation(ctx, url, mode, max_chars_per_line, should_send_image)
+	await draw_operation(ctx, url, mode, max_chars_per_line, should_send_image, spaced)
 	running_channels.remove(ctx.message.channel)
 
 def test():

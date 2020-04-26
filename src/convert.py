@@ -73,10 +73,12 @@ discord_colorsets = {
 # mode: should correspond to one of `discord_colorsets`
 # chars_per_line: emojis per line. Discord desktop servers can show max 56 (67 in dms)
 # output_path: an optional path where the quantized image should be stored to
+# spaced: boolean; whether emojis should be separated by spaces
 def image_to_discord_messages(image: Image,
 		mode: str="square",
 		max_chars_per_line: int=67,
-		output_path: Optional[str]=None):
+		output_path: Optional[str]=None,
+		spaced: bool=False):
 	
 	palette, emoji_names = zip(*[(colorhex_to_tuple(c), e) for e, c in discord_colorsets[mode].items()])
 	palette = list(palette)
@@ -95,10 +97,10 @@ def image_to_discord_messages(image: Image,
 	pix = image.load()
 	lines = []
 	for y in range(image.height):
-		line = ""
+		emojis = []
 		for x in range(image.width):
 			# pix[x, y] returns a palette index
-			line += emoji_names[pix[x, y]]
-		lines.append(line)
+			emojis.append(emoji_names[pix[x, y]])
+		lines.append((" " if spaced else "").join(emojis))
 
 	return lines
