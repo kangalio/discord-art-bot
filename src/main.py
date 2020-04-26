@@ -104,6 +104,10 @@ async def art(ctx):
 	
 	is_admin = ctx.message.author == app_info.owner
 	
+	if "ping" in args:
+		await ctx.message.channel.send(f"Pong! {round(bot.latency*1000)}ms")
+		return
+	
 	if "update" in args:
 		if is_admin:
 			await update(ctx)
