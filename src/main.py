@@ -1,10 +1,10 @@
 from typing import *
 
 import os, time, urllib
-from PIL import Image
 from io import BytesIO
 
 import requests, discord
+from PIL import Image
 from discord.ext import commands
 
 import convert

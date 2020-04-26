@@ -1,0 +1,3 @@
+Pillow
+discord.py
+requests
