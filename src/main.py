@@ -1,6 +1,6 @@
 from typing import *
 
-import os, time, urllib
+import os, sys, time, urllib, asyncio
 from io import BytesIO
 
 import requests, discord
@@ -35,8 +35,27 @@ def get_url_from_msg(msg) -> Optional[str]:
 		return None
 
 bot = commands.Bot(command_prefix="$", description='A bot that does beautiful art')
+app_info = None # will be set from on_ready
 pending_stops_channels: List[discord.TextChannel] = [] # list of channels where user requested operation stop
 running_channels: List[discord.TextChannel] = [] # list of channels where an operation is running
+
+async def update(ctx) -> None:
+	import subprocess
+	
+	try:
+		output_bytes = subprocess.check_output(["git", "pull"])
+		return_code = 0
+	except subprocess.CalledProcessError as e:
+		return_code = e.returncode
+		output_bytes = e.output
+	output = output_bytes.decode("UTF-8", errors="replace").strip()
+	await ctx.message.channel.send(output[:2000])
+	if return_code != 0:
+		await ctx.message.channel.send(f"Aborting update (Exit code {return_code})")
+		return
+	
+	await ctx.message.channel.send("Relaunching python...")
+	os.execv(sys.executable, ['python'] + sys.argv) # no idea why this works
 
 async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
 	message_write_start = time.time()
@@ -74,12 +93,23 @@ async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, shou
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
+	global app_info
+	app_info = await bot.application_info()
+	print(f"{bot.user} has connected to Discord!")
 
 @bot.command()
 async def art(ctx):
 	args = ctx.message.content.split()[1:] # [1:] to exclude the command itself
 	args = [arg.lower() for arg in args]
+	
+	is_admin = ctx.message.author == app_info.owner
+	
+	if "update" in args:
+		if is_admin:
+			await update(ctx)
+		else:
+			await ctx.message.channel.send("Admin privileges required")
+		return
 	
 	if "stop" in args or "abort" in args or "cancel" in args:
 		if ctx.message.channel in running_channels:
