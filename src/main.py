@@ -54,8 +54,9 @@ async def update(ctx) -> None:
 		await ctx.message.channel.send(f"Aborting update (Exit code {return_code})")
 		return
 	
+	print("Updated. Relaunching...")
 	await ctx.message.channel.send("Relaunching python...")
-	os.execv(sys.executable, ['python'] + sys.argv) # no idea why this works
+	os.execv(sys.executable, ["python3"] + sys.argv) # no idea why this works
 
 async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
 	message_write_start = time.time()
