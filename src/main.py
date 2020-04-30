@@ -5,7 +5,6 @@ from io import BytesIO
 
 import requests, discord
 from PIL import Image
-from discord.ext import commands
 
 import convert
 from convert import image_to_discord_messages
@@ -34,12 +33,12 @@ def get_url_from_msg(msg) -> Optional[str]:
 		print(f"Multiple attachments :/ {msg.attachments}")
 		return None
 
-bot = commands.Bot(command_prefix="$", description='A bot that does beautiful art')
+client = discord.Client()
 app_info = None # will be set from on_ready
 pending_stops_channels: List[discord.TextChannel] = [] # list of channels where user requested operation stop
 running_channels: List[discord.TextChannel] = [] # list of channels where an operation is running
 
-async def update(ctx) -> None:
+async def update(msg) -> None:
 	import subprocess
 	
 	try:
@@ -49,16 +48,16 @@ async def update(ctx) -> None:
 		return_code = e.returncode
 		output_bytes = e.output
 	output = output_bytes.decode("UTF-8", errors="replace").strip()
-	await ctx.message.channel.send(output[:2000])
+	await msg.channel.send(output[:2000])
 	if return_code != 0:
-		await ctx.message.channel.send(f"Aborting update (Exit code {return_code})")
+		await msg.channel.send(f"Aborting update (Exit code {return_code})")
 		return
 	
 	print("Updated. Relaunching...")
-	await ctx.message.channel.send("Relaunching python...")
+	await msg.channel.send("Relaunching python...")
 	os.execv(sys.executable, ["python3"] + sys.argv) # no idea why this works
 
-async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
+async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
 	message_write_start = time.time()
 	
 	image = Image.open(BytesIO(requests.get(url).content))
@@ -69,66 +68,69 @@ async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, shou
 	
 	if tempimage:
 		tempimage.seek(0) # go back to beginning of file to be able to read the entirety of it
-		await ctx.message.channel.send(file=discord.File(tempimage, "quantized_image.png"))
+		await msg.channel.send(file=discord.File(tempimage, "quantized_image.png"))
 	
 	line_lengths = [len(line) for line in lines]
 	if max(line_lengths) > 2000:
-		await ctx.message.channel.send(f"Uh oh the resulting image is too big. The lines range from "
+		await msg.channel.send(f"Uh oh the resulting image is too big. The lines range from "
 				f"{min(line_lengths)} to {max(line_lengths)} characters. Maximum is 2000")
 		return
 	
 	for i, line in enumerate(lines):
 		print(f"Sending line {i+1}/{len(lines)} ({len(line)} chars)...")
-		last_message = await ctx.message.channel.send(line)
+		last_message = await msg.channel.send(line)
 		
 		# check abort request
-		if ctx.message.channel in pending_stops_channels:
-			pending_stops_channels.remove(ctx.message.channel)
+		if msg.channel in pending_stops_channels:
+			pending_stops_channels.remove(msg.channel)
 			await last_message.delete()
 			print("Aborted operation")
 			return
 	
 	message_write_duration = time.time() - message_write_start
 	if message_write_duration > 10: # at 10s upwards we'll write a confirmation message
-		await ctx.message.channel.send(f"Done in {message_write_duration:.2f}s")
+		await msg.channel.send(f"Done in {message_write_duration:.2f}s")
 	
 	print("Completed operation")
 
-@bot.event
+@client.event
 async def on_ready():
 	global app_info
-	app_info = await bot.application_info()
-	print(f"{bot.user} has connected to Discord!")
+	app_info = await client.application_info()
+	print(f"{client.user} has connected to Discord!")
 
-@bot.command()
-async def art(ctx):
-	args = ctx.message.content.split()[1:] # [1:] to exclude the command itself
-	args = [arg.lower() for arg in args]
-	
-	is_admin = ctx.message.author == app_info.owner
+@client.event
+async def on_message(msg) -> None:
+	if msg.content.startswith("$art"):
+		args = msg.content[4:].strip().split()
+		args = [arg.lower() for arg in args]
+		await art(msg, args)
+
+async def art(msg, args):
+	is_admin = msg.author == app_info.owner
 	
 	if "ping" in args:
-		await ctx.message.channel.send(f"Pong! {round(bot.latency*1000)}ms")
+		await msg.channel.send(f"Pong! {round(bot.latency*1000)}ms")
 		return
 	
 	if "update" in args:
 		if is_admin:
-			await update(ctx)
+			await update(msg)
 		else:
-			await ctx.message.channel.send("Admin privileges required")
+			await msg.channel.send("Admin privileges required")
 		return
 	
 	if "stop" in args or "abort" in args or "cancel" in args:
-		if ctx.message.channel in running_channels:
-			pending_stops_channels.append(ctx.message.channel)
+		if msg.channel in running_channels:
+			pending_stops_channels.append(msg.channel)
 		else:
-			await ctx.message.channel.send("There's no operation running here :thinking:")
+			await msg.channel.send("There's no operation running here :thinking:")
 		return
 	
 	# At this point this is definitely a draw operation
-	url = get_url_from_msg(ctx.message)
+	url = get_url_from_msg(msg)
 	if url is None:
-		await ctx.message.channel.send("Please attach a single image file to your message")
+		await msg.channel.send("Please attach a single image file to your message")
 		print("Warning: no image url found in message")
 		return
 	
@@ -157,16 +159,16 @@ async def art(ctx):
 	
 	if len(unknown_args) > 0:
 		params_string = ", ".join(f'"{arg}"' for arg in unknown_args)
-		await ctx.message.channel.send(f"Warning: ignored unknown parameters {params_string}")
+		await msg.channel.send(f"Warning: ignored unknown parameters {params_string}")
 	
 	if max_chars_per_line > 1000:
-		await ctx.message.channel.send("Those are quite many characters per line.. you sure you typed that in right?")
+		await msg.channel.send("Those are quite many characters per line.. you sure you typed that in right?")
 		return
 	
 	# after having extracted the parameters, pass it to draw_operation to handle the actual business
-	running_channels.append(ctx.message.channel)
-	await draw_operation(ctx, url, mode, max_chars_per_line, should_send_image, spaced)
-	running_channels.remove(ctx.message.channel)
+	running_channels.append(msg.channel)
+	await draw_operation(msg, url, mode, max_chars_per_line, should_send_image, spaced)
+	running_channels.remove(msg.channel)
 
 def test():
 	mode = "food"
@@ -183,4 +185,4 @@ def test():
 # ~ test()
 with open("token.txt") as f:
 	token = f.read().strip()
-bot.run(token)
+client.run(token)
