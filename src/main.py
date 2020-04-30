@@ -62,12 +62,14 @@ async def draw_operation(ctx, url: str, mode: str, max_chars_per_line: int, shou
 	message_write_start = time.time()
 	
 	image = Image.open(BytesIO(requests.get(url).content))
-	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line,
-			output_path="temp.png" if should_send_image else None, spaced=spaced)
+	tempimage = BytesIO() if should_send_image else None
+	lines = image_to_discord_messages(image,
+			mode=mode, max_chars_per_line=max_chars_per_line,
+			output=tempimage, spaced=spaced)
 	
-	if should_send_image:
-		with open("temp.png", "rb") as f: # TODO: should use a varying filename
-			await ctx.message.channel.send(file=discord.File(f, "quantized_image.png"))
+	if tempimage:
+		tempimage.seek(0) # go back to beginning of file to be able to read the entirety of it
+		await ctx.message.channel.send(file=discord.File(tempimage, "quantized_image.png"))
 	
 	line_lengths = [len(line) for line in lines]
 	if max(line_lengths) > 2000:

@@ -77,7 +77,7 @@ discord_colorsets = {
 def image_to_discord_messages(image: Image,
 		mode: str="square",
 		max_chars_per_line: int=67,
-		output_path: Optional[str]=None,
+		output: Optional[Any]=None,
 		spaced: bool=False):
 	
 	palette, emoji_names = zip(*[(colorhex_to_tuple(c), e) for e, c in discord_colorsets[mode].items()])
@@ -91,8 +91,8 @@ def image_to_discord_messages(image: Image,
 	if image.width > max_chars_per_line:
 		image = resize_to_width(image, max_chars_per_line)
 	image = quantize(image, palette)
-	if output_path:
-		image.save(output_path)
+	if output:
+		image.save(output, "PNG")
 
 	pix = image.load()
 	lines = []
