@@ -1,6 +1,6 @@
 from typing import *
 
-import os, sys, time, urllib, asyncio
+import os, sys, time, urllib, asyncio, logging
 from io import BytesIO
 
 import requests, discord
@@ -34,6 +34,7 @@ def get_url_from_msg(msg) -> Optional[str]:
 		return None
 
 client = discord.Client()
+logger = logging.getLogger()
 app_info = None # will be set from on_ready
 pending_stops_channels: List[discord.TextChannel] = [] # list of channels where user requested operation stop
 running_channels: List[discord.TextChannel] = [] # list of channels where an operation is running
@@ -124,10 +125,14 @@ async def on_ready():
 
 @client.event
 async def on_message(msg) -> None:
-	if msg.content.startswith("$art"):
-		args = msg.content[4:].strip().split()
-		args = [arg.lower() for arg in args]
-		await art(msg, args)
+	try:
+		if msg.content.startswith("$art"):
+			args = msg.content[4:].strip().split()
+			args = [arg.lower() for arg in args]
+			await art(msg, args)
+	except Exception as e:
+		logger.exception("Exception in on_message")
+		await msg.channel.send(f"Something went wrong: {e}")
 
 async def art(msg, args):
 	is_admin = msg.author == app_info.owner
@@ -137,7 +142,7 @@ async def art(msg, args):
 		return
 	
 	if "ping" in args:
-		await msg.channel.send(f"Pong! {round(bot.latency*1000)}ms")
+		await msg.channel.send(f"Pong! {round(client.latency*1000)}ms")
 		return
 	
 	if "update" in args:
