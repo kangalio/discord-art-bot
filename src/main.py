@@ -126,6 +126,7 @@ async def art(ctx):
 	# At this point this is definitely a draw operation
 	url = get_url_from_msg(ctx.message)
 	if url is None:
+		await ctx.message.channel.send("Please attach a single image file to your message")
 		print("Warning: no image url found in message")
 		return
 	
@@ -138,6 +139,7 @@ async def art(ctx):
 	max_chars_per_line = 20
 	
 	# extract parameters from args
+	unknown_args = []
 	for arg in args:
 		if arg == "outputimage":
 			should_send_image = True
@@ -147,7 +149,17 @@ async def art(ctx):
 			spaced = True
 		else:
 			try: max_chars_per_line = int(arg)
-			except ValueError: pass
+			except ValueError:
+				print(f"Warning: unknown arg \"{arg}\"")
+				unknown_args.append(arg)
+	
+	if len(unknown_args) > 0:
+		params_string = ", ".join(f'"{arg}"' for arg in unknown_args)
+		await ctx.message.channel.send(f"Warning: ignored unknown parameters {params_string}")
+	
+	if max_chars_per_line > 1000:
+		await ctx.message.channel.send("Those are quite many characters per line.. you sure you typed that in right?")
+		return
 	
 	# after having extracted the parameters, pass it to draw_operation to handle the actual business
 	running_channels.append(ctx.message.channel)
