@@ -20,7 +20,7 @@ Several optional parameters are possible (case-insensitive, order doesn't matter
 - **An integer number** sets the converted image's size in emojis-per-row<br/>_(default is 20)_
 - **circle**, **square**, **heart** or **food** sets the emoji type used for the conversion<br/>_(default is circle)_
 - **outputimage** makes the bot output its temporary image<br/>_(disabled by default)_
-- **spaced** separates all emojis with a single space. Better aspect ratio, but less maximum emojis-per-row<br/><_(disabled by default)_
+- **spaced** separates all emojis with a single space. Better aspect ratio, but less maximum emojis-per-row<br/>_(disabled by default)_
 
 Use `$art abort` (or `$art stop` or `$art cancel`) to interrupt the drawing process.
 
@@ -28,6 +28,9 @@ Use `$art abort` (or `$art stop` or `$art cancel`) to interrupt the drawing proc
 - `$art 20 square`
 - `$art 100 outputimage circle`
 - `$art 50 food`
+
+## Note
+This bot has an intentional rate-limit of one message per 1.5 seconds. This was done in order to not abuse the Discord bot API, and also to get the bot approved on [top.gg](https://top.gg).
 
 ## Examples
 <img src="https://imgur.com/HVCjtmx.png" width=33%><img src="https://imgur.com/Ci0BSr5.png" width=33%><img src="https://imgur.com/Gpzajqr.png" width=33%>
