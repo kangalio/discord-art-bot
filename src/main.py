@@ -129,6 +129,9 @@ async def on_message(msg) -> None:
 		await msg.channel.send(f"Something went wrong: {e}")
 
 async def art(msg, args):
+	# I wanna see if my bot has actual users :)
+	print(f"Art command was called by {msg.author.name} with args {args}!")
+	
 	is_admin = msg.author == app_info.owner
 	
 	if "help" in args:
