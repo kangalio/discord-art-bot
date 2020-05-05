@@ -12,6 +12,10 @@ Supports **dithering**, **arbitrary image and output sizes** and a **variety of 
 - **Heart** emojis
 - **Food** emojis (yes, food emojis)
 
+## How to add this bot
+
+**[Add this bot to your Discord server](https://discordapp.com/oauth2/authorize?client_id=703327445629272166&scope=bot&permissions=2048)**
+
 ## How to use
 
 Summon this bot with `$art` and an image file attached.
