@@ -17,12 +17,6 @@ Permissions Integer: 2048
 """
 
 
-def letter_to_regional_indicator(letter):
-	letter_index = ord(letter.upper()) - ord("A")
-	unicode_char = chr(ord("\N{REGIONAL INDICATOR SYMBOL LETTER A}") + letter_index)
-	print(f"got {unicode_char}")
-	return unicode_char
-
 def get_url_from_msg(msg) -> Optional[str]:
 	if len(msg.attachments) == 0:
 		print("ahhhh how to extract valid url from text message")
