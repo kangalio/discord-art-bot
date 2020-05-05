@@ -1,6 +1,6 @@
 from typing import *
 
-import os, sys, time, urllib, asyncio, logging
+import os, sys, time, urllib, asyncio, logging, time
 from io import BytesIO
 
 import requests, discord
@@ -16,6 +16,7 @@ This bot needs permissions:
 Permissions Integer: 2048
 """
 
+MSG_INTERVAL = 1.5 # the minimum delay inbetweeen messages, in seconds
 
 def get_url_from_msg(msg) -> Optional[str]:
 	if len(msg.attachments) == 0:
@@ -71,7 +72,14 @@ async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, shou
 				f"{min(line_lengths)} to {max(line_lengths)} characters. Maximum is 2000")
 		return
 	
+	last_message_time = 0.0 # this is 1970 or something like that
 	for i, line in enumerate(lines):
+		# rate-limit according to MSG_INTERVAL
+		how_long_since_last_message = time.time() - last_message_time
+		if how_long_since_last_message < MSG_INTERVAL:
+			time.sleep(MSG_INTERVAL - how_long_since_last_message)
+		last_message_time = time.time()
+		
 		print(f"Sending line {i+1}/{len(lines)} ({len(line)} chars)...")
 		last_message = await msg.channel.send(line)
 		
