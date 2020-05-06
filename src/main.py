@@ -58,7 +58,7 @@ async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, shou
 	
 	image = Image.open(BytesIO(requests.get(url).content))
 	tempimage = BytesIO() if should_send_image else None
-	lines = image_to_discord_messages(image,
+	shortcode_lines, unicode_lines = image_to_discord_messages(image,
 			mode=mode, max_chars_per_line=max_chars_per_line,
 			output=tempimage, spaced=spaced)
 	
@@ -66,10 +66,20 @@ async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, shou
 		tempimage.seek(0) # go back to beginning of file to be able to read the entirety of it
 		await msg.channel.send(file=discord.File(tempimage, "quantized_image.png"))
 	
-	line_lengths = [len(line) for line in lines]
-	if max(line_lengths) > 2000:
+	# decide if we're going to print unicode lines or shortcode lines
+	shortcode_line_lengths = [len(line) for line in shortcode_lines]
+	if max(shortcode_line_lengths) <= 2000:
+		print("using shortcode representation")
+		lines = shortcode_lines
+	elif max_chars_per_line <= 198:
+		lines = unicode_lines
+		print("using emoji representation")
+	else:
 		await msg.channel.send(f"Uh oh the resulting image is too big. The lines range from "
-				f"{min(line_lengths)} to {max(line_lengths)} characters. Maximum is 2000")
+				f"{min(shortcode_line_lengths)} to {max(shortcode_line_lengths)} "
+				"characters in shortcode form (max 2000) and the unicode form has "
+				f"{max_chars_per_line} "
+				"characters (max 198)")
 		return
 	
 	last_message_time = 0.0 # this is 1970 or something like that
@@ -141,6 +151,10 @@ async def art(msg, args):
 	print(f"Art command was called by {msg.author.name} with args {args}!")
 	
 	is_admin = msg.author == app_info.owner
+	
+	if "test" in args:
+		await msg.channel.send("⬛" * 1000)
+		return
 	
 	if "help" in args:
 		await write_help(msg)

@@ -1,5 +1,6 @@
 from typing import *
 from PIL import Image
+import emoji
 
 def flatten(l):
 	return [item for sublist in l for item in sublist]
@@ -70,15 +71,19 @@ discord_colorsets = {
 }
 
 # PUBLIC
-# mode: should correspond to one of `discord_colorsets`
-# chars_per_line: emojis per line. Discord desktop servers can show max 56 (67 in dms)
-# output_path: an optional path where the quantized image should be stored to
-# spaced: boolean; whether emojis should be separated by spaces
+# parameters:
+# - mode: should correspond to one of `discord_colorsets`
+# - chars_per_line: emojis per line. Discord desktop servers can show max 56 (67 in dms)
+# - output_path: an optional path where the quantized image should be stored to
+# - spaced: boolean; whether emojis should be separated by spaces
+# returns a tuple of two string lists, where the first one is a list of lines to print on Discord
+# with emojis in shortcode form. the second one is the same, but with unicode emojis instead of
+# shortcodes
 def image_to_discord_messages(image: Image,
 		mode: str="square",
 		max_chars_per_line: int=67,
 		output: Optional[Any]=None,
-		spaced: bool=False):
+		spaced: bool=False) -> Tuple[List[str], List[str]]:
 	
 	palette, emoji_names = zip(*[(colorhex_to_tuple(c), e) for e, c in discord_colorsets[mode].items()])
 	palette = list(palette)
@@ -95,12 +100,15 @@ def image_to_discord_messages(image: Image,
 		image.save(output, "PNG")
 
 	pix = image.load()
-	lines = []
+	shortcode_lines = []
+	unicode_lines = []
 	for y in range(image.height):
 		emojis = []
 		for x in range(image.width):
 			# pix[x, y] returns a palette index
 			emojis.append(emoji_names[pix[x, y]])
-		lines.append((" " if spaced else "").join(emojis))
+		shortcode_line = (" " if spaced else "").join(emojis)
+		shortcode_lines.append(shortcode_line)
+		unicode_lines.append(emoji.emojize(shortcode_line, use_aliases=True))
 
-	return lines
+	return shortcode_lines, unicode_lines
