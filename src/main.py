@@ -56,6 +56,10 @@ async def update(msg) -> None:
 async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
 	message_write_start = time.time()
 	
+	if max_chars_per_line > 198:
+		await msg.channel.send("That's too big. Discord has a hard limit of 198 emojis per line")
+		return
+	
 	image = Image.open(BytesIO(requests.get(url).content))
 	tempimage = BytesIO() if should_send_image else None
 	shortcode_lines, unicode_lines = image_to_discord_messages(image,
@@ -71,16 +75,9 @@ async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, shou
 	if max(shortcode_line_lengths) <= 2000:
 		print("using shortcode representation")
 		lines = shortcode_lines
-	elif max_chars_per_line <= 198:
-		lines = unicode_lines
-		print("using emoji representation")
 	else:
-		await msg.channel.send(f"Uh oh the resulting image is too big. The lines range from "
-				f"{min(shortcode_line_lengths)} to {max(shortcode_line_lengths)} "
-				"characters in shortcode form (max 2000) and the unicode form has "
-				f"{max_chars_per_line} "
-				"characters (max 198)")
-		return
+		print("using emoji representation")
+		lines = unicode_lines
 	
 	last_message_time = 0.0 # this is 1970 or something like that
 	for i, line in enumerate(lines):
@@ -153,7 +150,7 @@ async def art(msg, args):
 	is_admin = msg.author == app_info.owner
 	
 	if "test" in args:
-		await msg.channel.send("⬛" * 1000)
+		await msg.channel.send("💠"*198)
 		return
 	
 	if "help" in args:
