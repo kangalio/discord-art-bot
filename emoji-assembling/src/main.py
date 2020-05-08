@@ -1,7 +1,6 @@
 from typing import *
 
 import os, json
-from dataclasses import dataclass
 from glob import glob
 
 import emoji
@@ -9,61 +8,20 @@ import numpy as np
 from PIL import Image
 
 
-@dataclass
-class Emoji:
-	shortcode: str
-	unicode_string: str
-	image_path: str
-
-def get_shortcode_unicode_mapping() -> Dict[str, str]:
-	with open("discord-emoji-mapping/emoji-formatted-fixed.json") as f:
-		json_data = json.load(f)
-	
-	mapping = {}
-	for section in json_data.values():
-		for emoji in section:
-			shortcode = min(emoji["names"], key=len)
-			unicode_string = emoji["surrogates"]
-			mapping[shortcode] = unicode_string
-	
-	return mapping
-
-# returns dict of `unicode string` -> `image file path`
-def get_unicode_image_mapping() -> Dict[str, str]:
-	# 12.1.4 is the one Discord uses (source emojipedia.org/discord)
-	image_paths = glob("twemoji/v/12.1.4/72x72/*.png")
-
-	emojis = {}
-	for path in image_paths:
-		basename = os.path.basename(path)[:-4] # strip ".png"
-		charcodes = [int(hexcode, 16) for hexcode in basename.split("-")]
-		string = "".join(map(chr, charcodes))
-		
-		emojis[string] = path
-	
-	return emojis
-
-def assemble_emoji_list() -> List[Emoji]:
-	# cryptic variable names intensify (not really though)
-	s_u_mapping = get_shortcode_unicode_mapping()
-	u_i_mapping = get_unicode_image_mapping()
-	emojis = []
-	for s, u in s_u_mapping.items():
-		i = u_i_mapping.get(u)
-		if i:
-			emojis.append(Emoji(s, u, i))
-	return emojis
-
 def assemble_emoji_index(json_output_path: str) -> None:
-	discord_bg_color = "36393f"
-	discord_bg_color = [int(discord_bg_color[i:i+2], 16) for i in (0, 2, 4)]
-
-	result = []
-
 	np.set_printoptions(threshold=np.inf)
-	for emoji in assemble_emoji_list():
+	
+	image_paths = glob("twemoji/v/12.1.4/72x72/*.png")
+	
+	result = []
+	for image_path in image_paths:
+		# convert image filename to unicode string
+		basename = os.path.basename(image_path)[:-4] # strip extension
+		charcodes = [int(hexcode, 16) for hexcode in basename.split("-")]
+		unicode_string = "".join(map(chr, charcodes))
+		
 		# load image
-		img = Image.open(emoji.image_path).convert("RGBA") # palettized
+		img = Image.open(image_path).convert("RGBA") # palettized
 		width, height = img.size
 		
 		# set up numpy arrays and values
@@ -91,7 +49,7 @@ def assemble_emoji_index(json_output_path: str) -> None:
 		
 		avg_opacity = np.average(opacities)
 		
-		print("shortcode:", emoji.shortcode)
+		print("shortcode:", emoji.demojize(unicode_string))
 		# ~ print("dominant color:", dominant_color)
 		# ~ print(f"dominant color prop: {dominant_color_prop*100:.2f}%")
 		# ~ print("average color:", avg_color)
@@ -99,9 +57,8 @@ def assemble_emoji_index(json_output_path: str) -> None:
 		# ~ print()
 		
 		result.append({
-			"shortcode": emoji.shortcode,
-			"unicode_string": emoji.unicode_string,
-			"image_path": emoji.image_path,
+			"unicode_string": unicode_string,
+			"image_path": image_path,
 			"dominant_color": dominant_color.tolist(),
 			"dominant_color_prop": dominant_color_prop,
 			"avg_color": avg_color,
@@ -119,5 +76,5 @@ def analyze_emoji_index(json_path: str) -> None:
 		if emoji["dominant_color_prop"] == 1 and emoji["avg_opacity"] > 0.7:
 			print(emoji["shortcode"])
 
-# ~ assemble_emoji_index("result.json")
-analyze_emoji_index("result.json")
+assemble_emoji_index("result.json")
+# ~ analyze_emoji_index("result.json")
