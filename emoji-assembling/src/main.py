@@ -16,15 +16,15 @@ class Emoji:
 	image_path: str
 
 def get_shortcode_unicode_mapping() -> Dict[str, str]:
+	with open("discord-emoji-mapping/emoji-formatted-fixed.json") as f:
+		json_data = json.load(f)
+	
 	mapping = {}
-	for json_path in glob("discord-emoji/*.json"):
-		# those are emoticon->unicode mappings, we don't want that
-		if "emoji.json" in json_path: continue
-		# well that's the.. package.json. we don't want that either
-		if "package.json" in json_path: continue
-		
-		with open(json_path) as f:
-			mapping.update(json.load(f))
+	for section in json_data.values():
+		for emoji in section:
+			shortcode = min(emoji["names"], key=len)
+			unicode_string = emoji["surrogates"]
+			mapping[shortcode] = unicode_string
 	
 	return mapping
 
@@ -116,8 +116,8 @@ def analyze_emoji_index(json_path: str) -> None:
 		index = json.load(f)
 	
 	for emoji in index:
-		if emoji["dominant_color_prop_excluding_transparency"] > 0.9:
+		if emoji["dominant_color_prop"] == 1 and emoji["avg_opacity"] > 0.7:
 			print(emoji["shortcode"])
 
-assemble_emoji_index("result.json")
-# ~ analyze_emoji_index("result.json")
+# ~ assemble_emoji_index("result.json")
+analyze_emoji_index("result.json")
