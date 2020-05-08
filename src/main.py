@@ -149,10 +149,6 @@ async def art(msg, args):
 	
 	is_admin = msg.author == app_info.owner
 	
-	if "test" in args:
-		await msg.channel.send("💠"*198)
-		return
-	
 	if "help" in args:
 		await write_help(msg)
 		return
