@@ -1,13 +1,13 @@
 from typing import *
 
-import os, sys, time, urllib, asyncio, logging, time
+import os, sys, time, urllib, asyncio, logging, time, json
 from io import BytesIO
 
 import requests, discord
 from PIL import Image
 
 import convert
-from convert import image_to_discord_messages
+from convert import image_to_emoji_lines
 
 
 """
@@ -18,7 +18,11 @@ Permissions Integer: 2048
 
 MSG_INTERVAL = 1.5 # the minimum delay inbetweeen messages, in seconds
 
+with open("emojisets.json") as f:
+	emojisets = json.load(f)
+
 def get_url_from_msg(msg) -> Optional[str]:
+	# TODO: detect url in message
 	if len(msg.attachments) == 0:
 		print("ahhhh how to extract valid url from text message")
 		return None
@@ -53,7 +57,9 @@ async def update(msg) -> None:
 	await msg.channel.send("Relaunching python...")
 	os.execv(sys.executable, ["python3"] + sys.argv) # no idea why this works
 
-async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, should_send_image: bool, spaced: bool):
+async def draw_operation(msg, url: str, emojiset: Dict[str, str],
+		max_chars_per_line: int, should_send_image: bool, spaced: bool):
+	
 	message_write_start = time.time()
 	
 	if max_chars_per_line > 198:
@@ -62,22 +68,13 @@ async def draw_operation(msg, url: str, mode: str, max_chars_per_line: int, shou
 	
 	image = Image.open(BytesIO(requests.get(url).content))
 	tempimage = BytesIO() if should_send_image else None
-	shortcode_lines, unicode_lines = image_to_discord_messages(image,
-			mode=mode, max_chars_per_line=max_chars_per_line,
+	lines = image_to_emoji_lines(image,
+			emojiset=emojiset, max_chars_per_line=max_chars_per_line,
 			output=tempimage, spaced=spaced)
 	
 	if tempimage:
 		tempimage.seek(0) # go back to beginning of file to be able to read the entirety of it
 		await msg.channel.send(file=discord.File(tempimage, "quantized_image.png"))
-	
-	# decide if we're going to print unicode lines or shortcode lines
-	shortcode_line_lengths = [len(line) for line in shortcode_lines]
-	if max(shortcode_line_lengths) <= 2000:
-		print("using shortcode representation")
-		lines = shortcode_lines
-	else:
-		print("using emoji representation")
-		lines = unicode_lines
 	
 	last_message_time = 0.0 # this is 1970 or something like that
 	for i, line in enumerate(lines):
@@ -182,7 +179,7 @@ async def art(msg, args):
 	
 	# default parameters
 	should_send_image = False
-	mode = "circle"
+	emojiset = emojisets["circle"]
 	spaced = False
 	max_chars_per_line = 20
 	
@@ -191,8 +188,8 @@ async def art(msg, args):
 	for arg in args:
 		if arg == "outputimage":
 			should_send_image = True
-		elif arg in convert.discord_colorsets:
-			mode = arg
+		elif arg in emojisets:
+			emojiset = emojisets[arg]
 		elif arg in ["spaced"]:
 			spaced = True
 		else:
@@ -211,7 +208,7 @@ async def art(msg, args):
 	
 	# after having extracted the parameters, pass it to draw_operation to handle the actual business
 	running_channels.append(msg.channel)
-	await draw_operation(msg, url, mode, max_chars_per_line, should_send_image, spaced)
+	await draw_operation(msg, url, emojiset, max_chars_per_line, should_send_image, spaced)
 	running_channels.remove(msg.channel)
 
 def test():

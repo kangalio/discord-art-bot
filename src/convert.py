@@ -21,71 +21,19 @@ def quantize(image, palette):
     palette_image.putpalette(flatten(palette))
     return image.convert("RGB").quantize(palette=palette_image)
 
-def gen_emoji_set_from_default_colors(emoji_name_fn) -> Dict[str, str]:
-	return {
-		(emoji_name_fn)("purple"): "aa8ed6",
-		(emoji_name_fn)("black"): "31373d",
-		(emoji_name_fn)("blue"): "55acee",
-		(emoji_name_fn)("brown"): "c1694f",
-		(emoji_name_fn)("green"): "78b159",
-		(emoji_name_fn)("orange"): "ffac33",
-		(emoji_name_fn)("red"): "dd2e44",
-		(emoji_name_fn)("yellow"): "fdcb58",
-		(emoji_name_fn)("white"): "e6e7e8",
-	}
-
-# PUBLIC
-discord_colorsets = {
-	"circle": gen_emoji_set_from_default_colors(
-			lambda name: f":{name}_circle:"),
-	"square": gen_emoji_set_from_default_colors(
-			lambda name: f":{name}_large_square:" if name in ("black", "white") else f":{name}_square:"),
-	"heart": gen_emoji_set_from_default_colors(
-			lambda name: ":heart:" if name == "red" else f":{name}_heart:"),
-	"food": {
-		":green_apple:": "77b255",
-		":apple:": "dd2e44",
-		":pear:": "a6d388",
-		":tangerine:": "f4900c",
-		":lemon:": "ffcc4d",
-		":grapes:": "734da9",
-		":strawberry:": "c1243b",
-		":peach:": "ff886c",
-		":mango:": "ea564b",
-		":tomato:": "dd2e44",
-		":eggplant:": "744eaa",
-		":hot_pepper:": "d92e46",
-		":onion:": "eacd99",
-		":garlic:": "d7dfe5",
-		":potato:": "d89d81",
-		":egg:": "f7dece",
-		":cheese:": "fdaa31",
-		":poultry_leg:": "c1694f",
-		":fortune_cookie:": "fbaa3f",
-		":dumpling:": "fed882",
-		":fried_shrimp:": "ffac33",
-		":cookie:": "d89d81",
-		":peanuts:": "cf8b6f",
-		":ice_cube:": "bcd7df",
-	}
-}
-
 # PUBLIC
 # parameters:
-# - mode: should correspond to one of `discord_colorsets`
+# - emojiset: a dict of "emoji string" -> "emoji colorhex"
 # - chars_per_line: emojis per line. Discord desktop servers can show max 56 (67 in dms)
 # - output_path: an optional path where the quantized image should be stored to
 # - spaced: boolean; whether emojis should be separated by spaces
-# returns a tuple of two string lists, where the first one is a list of lines to print on Discord
-# with emojis in shortcode form. the second one is the same, but with unicode emojis instead of
-# shortcodes
-def image_to_discord_messages(image: Image,
-		mode: str="square",
+def image_to_emoji_lines(image: Image,
+		emojiset: Dict[str, str],
 		max_chars_per_line: int=67,
 		output: Optional[Any]=None,
-		spaced: bool=False) -> Tuple[List[str], List[str]]:
+		spaced: bool=False) -> List[str]:
 	
-	palette, emoji_names = zip(*[(colorhex_to_tuple(c), e) for e, c in discord_colorsets[mode].items()])
+	palette, emoji_names = zip(*[(colorhex_to_tuple(c), e) for e, c in emojiset.items()])
 	palette = list(palette)
 	emoji_names = list(emoji_names)
 
@@ -100,15 +48,12 @@ def image_to_discord_messages(image: Image,
 		image.save(output, "PNG")
 
 	pix = image.load()
-	shortcode_lines = []
-	unicode_lines = []
+	lines: List[str] = []
 	for y in range(image.height):
 		emojis = []
 		for x in range(image.width):
 			# pix[x, y] returns a palette index
 			emojis.append(emoji_names[pix[x, y]])
-		shortcode_line = (" " if spaced else "").join(emojis)
-		shortcode_lines.append(shortcode_line)
-		unicode_lines.append(emoji.emojize(shortcode_line, use_aliases=True))
+		lines.append((" " if spaced else "").join(emojis))
 
-	return shortcode_lines, unicode_lines
+	return lines

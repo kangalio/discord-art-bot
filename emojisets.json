@@ -1,0 +1,61 @@
+{
+  "circle": {
+    "\ud83d\udfe3": "aa8ed6",
+    "\u26ab": "31373d",
+    "\ud83d\udd35": "55acee",
+    "\ud83d\udfe4": "c1694f",
+    "\ud83d\udfe2": "78b159",
+    "\ud83d\udfe0": "ffac33",
+    "\ud83d\udd34": "dd2e44",
+    "\ud83d\udfe1": "fdcb58",
+    "\u26aa": "e6e7e8"
+  },
+  "square": {
+    "\ud83d\udfea": "aa8ed6",
+    "\u2b1b": "31373d",
+    "\ud83d\udfe6": "55acee",
+    "\ud83d\udfeb": "c1694f",
+    "\ud83d\udfe9": "78b159",
+    "\ud83d\udfe7": "ffac33",
+    "\ud83d\udfe5": "dd2e44",
+    "\ud83d\udfe8": "fdcb58",
+    "\u2b1c": "e6e7e8"
+  },
+  "heart": {
+    "\ud83d\udc9c": "aa8ed6",
+    "\ud83d\udda4": "31373d",
+    "\ud83d\udc99": "55acee",
+    "\ud83e\udd0e": "c1694f",
+    "\ud83d\udc9a": "78b159",
+    "\ud83e\udde1": "ffac33",
+    "\u2764": "dd2e44",
+    "\ud83d\udc9b": "fdcb58",
+    "\ud83e\udd0d": "e6e7e8"
+  },
+  "food": {
+    "\ud83c\udf4f": "77b255",
+    "\ud83c\udf4e": "dd2e44",
+    "\ud83c\udf50": "a6d388",
+    "\ud83c\udf4a": "f4900c",
+    "\ud83c\udf4b": "ffcc4d",
+    "\ud83c\udf47": "734da9",
+    "\ud83c\udf53": "c1243b",
+    "\ud83c\udf51": "ff886c",
+    "\ud83e\udd6d": "ea564b",
+    "\ud83c\udf45": "dd2e44",
+    "\ud83c\udf46": "744eaa",
+    "\ud83c\udf36": "d92e46",
+    "\ud83e\uddc5": "eacd99",
+    "\ud83e\uddc4": "d7dfe5",
+    "\ud83e\udd54": "d89d81",
+    "\ud83c\udf73": "f7dece",
+    "\ud83e\uddc0": "fdaa31",
+    "\ud83c\udf57": "c1694f",
+    "\ud83e\udd60": "fbaa3f",
+    "\ud83e\udd5f": "fed882",
+    "\ud83c\udf64": "ffac33",
+    "\ud83c\udf6a": "d89d81",
+    "\ud83e\udd5c": "cf8b6f",
+    "\ud83e\uddca": "bcd7df"
+  }
+}
