@@ -24,7 +24,7 @@ Several optional parameters are possible (case-insensitive, order doesn't matter
 - **An integer number** sets the converted image's size in emojis-per-row<br/>_(default is 20)_
 - **circle**, **square**, **heart** or **food** sets the emoji type used for the conversion<br/>_(default is circle)_
 - **outputimage** makes the bot output its temporary image<br/>_(disabled by default)_
-- **spaced** separates all emojis with a single space. Better aspect ratio, but less maximum emojis-per-row<br/>_(disabled by default)_
+- **nospace** removes the space character inbetween all emojis<br/>_(disabled by default)_
 
 Use `$art abort` (or `$art stop` or `$art cancel`) to interrupt the drawing process.
 
