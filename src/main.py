@@ -111,7 +111,7 @@ Several optional parameters are possible (case-insensitive, order doesn't matter
   _(default is circle)_
 - **outputimage** makes the bot output its temporary image
   _(disabled by default)_
-- **nospaced** removes the space character inbetween all emojis
+- **nospace** removes the space character inbetween all emojis
   _(disabled by default)_
 
 Use `$art abort` (or `$art stop` or `$art cancel`) to interrupt the drawing process.
