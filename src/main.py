@@ -111,7 +111,7 @@ Several optional parameters are possible (case-insensitive, order doesn't matter
   _(default is circle)_
 - **outputimage** makes the bot output its temporary image
   _(disabled by default)_
-- **spaced** separates all emojis with a single space. Better aspect ratio, but less maximum emojis-per-row
+- **nospaced** removes the space character inbetween all emojis
   _(disabled by default)_
 
 Use `$art abort` (or `$art stop` or `$art cancel`) to interrupt the drawing process.
@@ -180,7 +180,7 @@ async def art(msg, args):
 	# default parameters
 	should_send_image = False
 	emojiset = emojisets["circle"]
-	spaced = False
+	spaced = True
 	max_chars_per_line = 20
 	
 	# extract parameters from args
@@ -190,8 +190,8 @@ async def art(msg, args):
 			should_send_image = True
 		elif arg in emojisets:
 			emojiset = emojisets[arg]
-		elif arg in ["spaced"]:
-			spaced = True
+		elif arg == "nospace":
+			spaced = False
 		else:
 			try: max_chars_per_line = int(arg)
 			except ValueError:
