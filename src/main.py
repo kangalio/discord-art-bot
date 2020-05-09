@@ -212,13 +212,13 @@ async def art(msg, args):
 	running_channels.remove(msg.channel)
 
 def test():
-	mode = "food"
+	emojiset = emojisets["square"]
 	output_path = "test/output.png"
 	max_chars_per_line = 100
 	
-	image = Image.open("test/image.jpg")
-	lines = image_to_discord_messages(image, mode=mode, max_chars_per_line=max_chars_per_line,
-			output_path=output_path)
+	image = Image.open("test/image.png")
+	lines = image_to_emoji_lines(image, emojiset=emojiset, max_chars_per_line=max_chars_per_line,
+			output=open(output_path, "wb"))
 	with open("test/output.txt", "w") as f:
 		for line in lines:
 			print(line, file=f)

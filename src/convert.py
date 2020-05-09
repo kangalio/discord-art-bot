@@ -19,7 +19,9 @@ def resize_to_width(image, new_width):
 def quantize(image, palette):
     palette_image = Image.new("P", (1, 1))
     palette_image.putpalette(flatten(palette))
-    return image.convert("RGB").quantize(palette=palette_image)
+    return image.convert("RGB").quantize(palette=palette_image,
+			method=0, # it's the default
+			dither=Image.FLOYDSTEINBERG) # it's the default
 
 # PUBLIC
 # parameters:
