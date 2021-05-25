@@ -142,7 +142,8 @@ async def on_message(msg) -> None:
 
 async def art(msg, args):
 	# I wanna see if my bot has actual users :)
-	print(f"Art command was called by {msg.author.name} with args {args}!")
+	guild_name = msg.guild.name if msg.guild else "<DMs>"
+	print(f"Art command was called by {msg.author.name} in {guild_name} with args {args}!")
 	
 	is_admin = msg.author == app_info.owner
 	
