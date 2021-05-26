@@ -22,9 +22,8 @@ with open("emojisets.json") as f:
 	emojisets = json.load(f)
 
 def get_url_from_msg(msg) -> Optional[str]:
-	# TODO: detect url in message
 	if len(msg.attachments) == 0:
-		print("ahhhh how to extract valid url from text message")
+		# TODO: extract image url from message?
 		return None
 	elif len(msg.attachments) == 1:
 		return msg.attachments[0].url
@@ -172,7 +171,7 @@ async def art(msg, args):
 	# At this point this is definitely a draw operation
 	url = get_url_from_msg(msg)
 	if url is None:
-		await msg.channel.send("Please attach a single image file to your message")
+		await msg.channel.send("Please attach a single image file to your message\nFor more information, see the help menu (`$art help`)")
 		print("Warning: no image url found in message")
 		return
 	
