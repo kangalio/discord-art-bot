@@ -3,10 +3,36 @@ from typing import *
 import os, json
 from glob import glob
 
-import emoji
+import emoji as emoji_util
+import emojis as emoji_util_2
 import numpy as np
 from PIL import Image
 
+categories = {}
+for category_name in emoji_util_2.db.get_categories():
+	emojis = [emoji.emoji for emoji in emoji_util_2.db.get_emojis_by_category(category_name)]
+	categories[category_name] = emojis
+def get_category(emoji: str) -> Optional[str]:
+	for category_name, emojis in categories.items():
+		if emoji in emojis:
+			return category_name
+	if len(emoji) > 1:
+		return get_category(emoji[0])
+	return None
+
+def mix_color(a: List[float], b: List[float], weight_a: float, weight_b: float) -> List[float]:
+	output = []
+	for component_a, component_b in zip(a, b):
+		print(component_a, weight_a)
+		print(component_b, weight_b)
+		output_component = (component_a * weight_a + component_b * weight_b) / (weight_a + weight_b)
+		print(output_component)
+		print()
+		output.append(output_component)
+	return output
+
+def color_to_hexcode(components: List[float]) -> str:
+	return "".join(f"{round(component):02x}" for component in components)
 
 def assemble_emoji_index(json_output_path: str) -> None:
 	np.set_printoptions(threshold=np.inf)
@@ -49,7 +75,8 @@ def assemble_emoji_index(json_output_path: str) -> None:
 		
 		avg_opacity = np.average(opacities)
 		
-		print("shortcode:", emoji.demojize(unicode_string))
+		print("shortcode:", emoji_util.demojize(unicode_string))
+		# ~ print("image_path", image_path)
 		# ~ print("dominant color:", dominant_color)
 		# ~ print(f"dominant color prop: {dominant_color_prop*100:.2f}%")
 		# ~ print("average color:", avg_color)
@@ -68,13 +95,48 @@ def assemble_emoji_index(json_output_path: str) -> None:
 	with open(json_output_path, "w") as f:
 		json.dump(result, f)
 
-def analyze_emoji_index(json_path: str) -> None:
+def filter_emoji_index(json_path: str) -> None:
 	with open(json_path) as f:
 		index = json.load(f)
 	
+	emojis = []
 	for emoji in index:
-		if emoji["dominant_color_prop"] == 1 and emoji["avg_opacity"] > 0.7:
-			print(emoji["shortcode"])
+		name = emoji_util.demojize(emoji["unicode_string"])[1:-1].lower()
+		category = get_category(emoji["unicode_string"])
+		display = name + " " + emoji["unicode_string"]
+		avg_opacity = emoji["avg_opacity"] / 255
+		
+		if emoji["unicode_string"] in "😶😡🥵🥶😈🤡💀🤢🕵🎃":
+			emojis.append(emoji)
+		# ~ if category and "Food" in category:
+			# ~ #emoji["dominant_color_prop"] > 0.7
+			# ~ if avg_opacity > 0.5:
+				# ~ emojis.append(emoji)
+				# ~ print(display)
+	
+	return emojis
+		
+def create_emojiset(emojis: List[Dict[str, Any]]) -> Dict[str, str]:
+	discord_bg = [54, 57, 63]
+	
+	opacities = [emoji["avg_opacity"]/255 for emoji in emojis]
+	
+	# normalize opacities
+	# ~ min_opacity = min(opacities)
+	# ~ range_opacity = max(opacities) - min_opacity
+	# ~ opacities = [(opacity - min_opacity) / range_opacity for opacity in opacities]
+	
+	emojiset = {}
+	for emoji, opacity in zip(emojis, opacities):
+		print(f'Mixing {emoji["avg_color"]} with {opacity:.2f}')
+		color = mix_color(emoji["avg_color"], discord_bg, opacity, 1 - opacity)
+		print(color)
+		print()
+		emojiset[emoji["unicode_string"]] = color_to_hexcode(color)
+	
+	return emojiset
 
-assemble_emoji_index("result.json")
-# ~ analyze_emoji_index("result.json")
+# ~ assemble_emoji_index("result.json")
+emojis = filter_emoji_index("result.json")
+emojiset = create_emojiset(emojis)
+print(json.dumps(emojiset, indent=2))
